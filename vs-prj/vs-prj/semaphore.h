@@ -1,23 +1,26 @@
+#include <atomic>
+#include <condition_variable>
+
 class Semaphore
 {
 
 public:
-
-	Semaphore(int maxThr) : maxThr(maxThr) {};
-
-	void wait() {
-	  
+  explicit Semaphore(int const max) : max(max) {};
+  void wait() {
+    std::unique_lock<std::mutex> lk(mtx);
+    while (ct == max) cv.wait(lk);
+    ++ct;
+  }
+  void signal() {
+    std::unique_lock<std::mutex> lk(mtx);
+    --ct;
+    cv.notify_one();
 	}
-
-	void signal() {
-	  
-	}
-
 
 private:
-
-	int maxThr = -1;
-	int numThr = 0;
-
+  std::mutex mtx;
+  std::condition_variable cv;
+  int max;
+  int ct = 0;
 };
 
